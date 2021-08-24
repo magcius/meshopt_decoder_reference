@@ -26,6 +26,8 @@ The `filter` argument to `decodeVertexBuffer` is one of `"NONE", "OCTAHEDRAL", "
 Your goal is to create a reference decoder - correctness is important, but performance is not important. Note that today there exists a reference implementation in C++.
 The idea behind creating a reference decoder is both to have an easy-to-follow implementation, but also to validate correctness of the spec - the spec was written based on the C++ implementation, so it may contain errors.
 
+The decoder may assume the source contains a valid encoding; when the input is malformed, it's acceptable to produce garbage output or throw an exception.
+
 When the spec is found to contain ambiguities, please edit the spec to note or resolve them.
 When you're having trouble getting the implementation based on the spec to pass, you can consult the reference C++ implementation (linked below in rot13 to avoid temptation).
 However, please only do so if you're stuck and can't follow the spec - and if you figure out the issue, please edit the spec to match the actual implementation.
