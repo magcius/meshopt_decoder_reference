@@ -191,23 +191,28 @@ The encoded stream structure is as follows:
 - One or more attribute blocks, detailed below
 - Tail block, which consists of a baseline element stored verbatim, padded to 32 bytes
 
-Each attribute block stores a sequence of deltas, with the first element in the first block using the deltas from the baseline element stored in the tail block, and each subsequent element using the deltas from the previous element. The attribute block always stores an integer number of elements, with that number computed as follows:
+Note that there is no easy way to directly calculate the length of a stream; instead, it is expected that the user passes a correctly sized stream so that the tail block element can be found.
+
+Each attribute block stores a sequence of deltas, with the first element in the first block using the deltas from the baseline element stored in the tail block, and each subsequent element using the deltas from the previous element. The attribute block always stores up to an integer number of elements, with that number computed as follows:
 
 ```
-blockSize = min((8192 / byteStride) & ~15, 256)
+attrBlockMaxElementCount = min((8192 / byteStride) & ~15, 256)
 ```
 
-The attribute block structure consists of `byteStride` blocks (one for each byte of the element) with the following structure:
-
-- Header bits, 2 bits for each group of 16 elements (`blockSize`/16 2-bit values), padded to a byte
-- Delta blocks, with variable number of bytes stored for each group of 16 elements
-
-Each group always contains 16 elements; when the number of elements that needs to be encoded isn't divisible by 16, it gets rounded up and the remaining elements are ignored after decoding.
-
-Header bits are stored from least significant to most significant bit - header bits for 4 consecutive groups of 16 elements are packed in a byte together as follows:
+Each attribute block consists of `byteStride` "data blocks" (one for each byte of the element), and each "data block" contains deltas stored for groups of elements. Each group always contains 16 elements; when the number of elements that needs to be encoded isn't divisible by 16, it gets rounded up and the remaining elements are ignored after decoding. In other terms:
 
 ```
-bits0 | (bits1 << 2) | (bits2 << 4) | (bits3 << 6)
+groupCount = ceil(attrBlockElementCount / 16)
+```
+
+The structure of each "data block" breaks down as follows:
+- Header bits, with 2 bits for each group
+- Delta blocks, with variable number of bytes stored for each group
+
+Header bits are stored from least significant to most significant bit - header bits for 4 consecutive groups are packed in a byte together as follows:
+
+```
+(headerBitsForGroup0 << 0) | (headerBitsForGroup1 << 2) | (headerBitsForGroup2 << 4) | (headerBitsForGroup3 << 6)
 ```
 
 The header bits establish the delta encoding mode (0-3) for each group of 16 elements that follows:
@@ -406,7 +411,7 @@ The output of the filter is three decoded unit vector components, stored as 8-bi
 ```
 void decode(intN_t input[4], intN_t output[4]) {
 	// input[2] encodes a K-bit representation of 1.0
-	float32_t one = input[3];
+	float32_t one = input[2];
 
 	float32_t x = input[0] / one;
 	float32_t y = input[1] / one;
@@ -415,8 +420,8 @@ void decode(intN_t input[4], intN_t output[4]) {
 	// octahedral fixup for negative hemisphere
 	float32_t t = min(z, 0.0);
 
-	x += copysign(t, x);
-	y += copysign(t, y);
+	x -= copysign(t, x);
+	y -= copysign(t, y);
 
 	// renormalize (x, y, z)
 	float32_t len = sqrt(x * x + y * y + z * z);
