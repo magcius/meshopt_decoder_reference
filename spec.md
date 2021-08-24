@@ -78,6 +78,7 @@ For the extension object to be valid, the following must hold:
 - When `mode` is `"TRIANGLES"` or `"INDICES"`, `filter` must be equal to `"NONE"` or omitted
 - When `filter` is `"OCTAHEDRAL"`, `byteStride` must be equal to 4 or 8
 - When `filter` is `"QUATERNION"`, `byteStride` must be equal to 8
+- When `filter` is `"EXPONENTIAL"`, `byteStride` must be divisible by 4
 
 The type of compressed data must match the bitstream specification (note that each `mode` specifies a different bitstream format).
 
@@ -422,7 +423,9 @@ For performance reasons the results of the decoding process are specified to one
 
 Octahedral filter allows to encode unit length 3D vectors (normals/tangents) using octahedral encoding, which results in a more optimal quality vs precision tradeoff compared to storing raw components.
 
-The input to the filter is four 8-bit or 16-bit components, where the first two specify the X and Y components in octahedral encoding encoded as signed normalized K-bit integers (4 <= K <= 16, integers are stored in two's complement format), the third component explicitly encodes 1.0 as a signed normalized K-bit integer, and the last component may contain arbitrary data (which is useful for tangents).
+This filter is only valid `byteStride` is 4 or 8. When `byteStride` is 4, then the input and output of this filter are four 8-bit components, and when `byteStride` is 8, the input and output of this filter are four 16-bit signed components.
+
+The input to the filter is four 8-bit or 16-bit components, where the first two specify the X and Y components in octahedral encoding encoded as signed normalized K-bit integers (4 <= K <= 16, integers are stored in two's complement format), the third component explicitly encodes 1.0 as a signed normalized K-bit integer. The last component may contain arbitrary data which is passed through unfiltered (this can be useful for tangents).
 
 The encoding of the third component allows to compute K for each vector independently from the bit representation, and must encode 1.0 precisely which is equivalent to `(1 << (K - 1)) - 1` as an integer; values of the third component that aren't equal to `(1 << (K - 1)) - 1` for a valid `K` are invalid and the result of decoding such vectors is unspecified.
 
@@ -467,6 +470,8 @@ void decode(intN_t input[4], intN_t output[4]) {
 
 Quaternion filter allows to encode unit length quaternions using normalized 16-bit integers for all components, but allows control over the precision used for the components and provides better quality compared to naively encoding each component one by one.
 
+This filter is only valid `byteStride` is 8.
+
 The input to the filter is three quaternion components, excluding the component with the largest magnitude, encoded as signed normalized K-bit integers (4 <= K <= 16, integers are stored in two's complement format), and an index of the largest component that is omitted in the encoding. The largest component is assumed to always be positive (which is possible due to quaternion double-cover). To allow per-element control over K, the last input element must explicitly encode 1.0 as a signed normalized K-bit integer, except for the least significant 2 bits that store the index of the maximum component.
 
 When storing a K-bit integer in a 16-bit component when K is not 16, the remaining bits (e.g. top 6 bits in case of K=10) must be equal to the sign bit; the valid range of the resulting integer is from `-max` to `max` where `max = (1 << (K - 1)) - 1`. The behavior of decoding values outside of that range is unspecified.
@@ -501,6 +506,8 @@ void decode(int16_t input[4], int16_t output[4]) {
 ## Filter 3: exponential
 
 Exponential filter allows to encode floating point values with a range close to the full range of a 32-bit floating point value, but allows more control over the exponent/mantissa to trade quality for precision, and has a bit structure that is more optimally aligned to the byte boundary to facilitate better compression.
+
+This filter is only valid `byteStride` is a multiple of 4.
 
 The input to the filter is a sequence of 32-bit little endian integers, with the most significant 8 bits specifying a (signed) exponent value, and the remaining 24 bits specifying a (signed) mantissa value. The integers are stored in two-complement format.
 
