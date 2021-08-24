@@ -45,6 +45,8 @@ By completing this assignment you explicitly transfer the rights to reference de
 Reference implementation
 ===
 
+Please *only* consult this if you're stuck and can't figure out how to implement the spec in a way that passes tests. Please do this after you try to implement all functions, not just during the implementation of the first one.
+
 uggcf://tvguho.pbz/mrhk/zrfubcgvzvmre/oybo/znfgre/fep/iregrkpbqrp.pcc
 uggcf://tvguho.pbz/mrhk/zrfubcgvzvmre/oybo/znfgre/fep/vaqrkpbqrp.pcc
 uggcf://tvguho.pbz/mrhk/zrfubcgvzvmre/oybo/znfgre/fep/iregrksvygre.pcc
