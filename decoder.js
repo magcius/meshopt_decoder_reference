@@ -143,7 +143,7 @@ exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) 
             values[i + (maxc + 0) % 4] = Math.round(w * 32767);
         }
     } else if (filter === 'EXPONENTIAL') {
-        if (byteStride !== 16)
+        if ((byteStride & 0x03) !== 0x00)
             return;
 
         const input = new Int32Array(target.buffer);
