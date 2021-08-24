@@ -300,7 +300,7 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
                     pushfifo(vertexfifo, c);
             }
 
-            pushfifo(edgefifo, b); pushfifo(edgefifo, a);
+            pushfifo(edgefifo, a); pushfifo(edgefifo, b);
             pushfifo(edgefifo, b); pushfifo(edgefifo, c);
             pushfifo(edgefifo, c); pushfifo(edgefifo, a);
 
