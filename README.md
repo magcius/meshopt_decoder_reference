@@ -12,14 +12,16 @@ The task at hand is to create a reference decoder in JavaScript, following spec.
 decoder.js should implement an object with three functions with the following signatures (using TypeScript syntax for clarity only):
 
 ```
-decodeVertexBuffer: (target: Uint8Array, count: number, size: number, source: Uint8Array, filter?: string) => void;
-decodeIndexBuffer: (target: Uint8Array, count: number, size: number, source: Uint8Array) => void;
-decodeIndexSequence: (target: Uint8Array, count: number, size: number, source: Uint8Array) => void;
+decodeVertexBuffer: (target: Uint8Array, count: number, stride: number, source: Uint8Array, filter?: string) => void;
+decodeIndexBuffer: (target: Uint8Array, count: number, stride: number, source: Uint8Array) => void;
+decodeIndexSequence: (target: Uint8Array, count: number, stride: number, source: Uint8Array) => void;
 ```
 
-The `filter` argument to `decodeVertexBuffer` is one of `"NONE", "OCTAHEDRAL", "QUATERNION", "EXPONENTIAL"`. The encoding is explained in the spec; `undefined` is the same as `"NONE"`.
-
 The three functions correspond to three encodings described in the spec - `decodeVertexBuffer` corresponds to `"ATTRIBUTES"`, `decodeIndexBuffer` corresponds to `"TRIANGLES"`, `decodeIndexSequence` corresponds to `"INDICES"`.
+
+`stride` corresponds to `byteStride` from the spec.
+
+The `filter` argument to `decodeVertexBuffer` is one of `"NONE", "OCTAHEDRAL", "QUATERNION", "EXPONENTIAL"`. The encoding is explained in the spec; `undefined` is the same as `"NONE"`.
 
 Your goal is to create a reference decoder - correctness is important, but performance is not important. Note that today there exists a reference implementation in C++.
 The idea behind creating a reference decoder is both to have an easy-to-follow implementation, but also to validate correctness of the spec - the spec was written based on the C++ implementation, so it may contain errors.
