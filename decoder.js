@@ -62,7 +62,7 @@ exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) 
                         // 0 = >>> 6, 1 = >>> 4, 2 = >>> 2, 3 = >>> 0
                         const shift = (6 - ((m & 0x03) << 1));
                         delta = (source[srcBase + (m >>> 2)] >>> shift) & 0x03;
-                        if (delta === 3)
+                        if (delta === 0x03)
                             delta = source[srcOffs++];
                         deltas[m] = delta;
                     }
@@ -71,10 +71,10 @@ exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) 
                     const srcBase = srcOffs;
                     srcOffs += 0x08;
                     for (let m = 0; m < 0x10; m++) {
-                        // 0 = >>> 6, 1 = >>> 4, 2 = >>> 2, 3 = >>> 0
+                        // 0 = >>> 4, 1 = >>> 0
                         const shift = (m & 0x01) ? 0 : 4;
-                        delta = (source[srcBase + (m >>> 1)] >>> shift) & 0x07;
-                        if (delta === 7)
+                        delta = (source[srcBase + (m >>> 1)] >>> shift) & 0x0F;
+                        if (delta === 0x0F)
                             delta = source[srcOffs++];
                         deltas[m] = delta;
                     }
