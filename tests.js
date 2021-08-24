@@ -30,6 +30,23 @@ var tests = {
 		assert.deepStrictEqual(result, expected);
 	},
 
+	decodeVertexBuffer_More: function() {
+		var encoded = new Uint8Array([
+			160, 0, 1, 42, 170, 170, 170, 2, 4, 68, 68, 68, 68, 68, 68, 68, 3, 0, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
+	        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	    ]);
+
+		var expected = new Uint8Array([
+  0, 0, 0, 0, 0, 1, 2, 8, 0, 2, 4, 16, 0, 3, 6, 24, 0, 4, 8, 32, 0, 5, 10, 40, 0, 6, 12, 48, 0, 7, 14, 56, 0, 8, 16, 64, 0, 9,
+  18, 72, 0, 10, 20, 80, 0, 11, 22, 88, 0, 12, 24, 96, 0, 13, 26, 104, 0, 14, 28, 112, 0, 15, 30, 120
+  		]);
+
+		var result = new Uint8Array(expected.length);
+		decoder.decodeVertexBuffer(result, 16, 4, encoded);
+
+		assert.deepStrictEqual(result, expected);
+	},
+
 	decodeIndexBuffer: function() {
 		var encoded = new Uint8Array([
 			0xe1, 0xf0, 0x10, 0xfe, 0x1f, 0x3d, 0x00, 0x0a, 0x00, 0x76, 0x87, 0x56, 0x67, 0x78, 0xa9, 0x86,
