@@ -218,9 +218,25 @@ Header bits are stored from least significant to most significant bit - header b
 The header bits establish the delta encoding mode (0-3) for each group of 16 elements that follows:
 
 - bits 0: All 16 byte deltas are 0; the size of the encoded block is 0 bytes
-- bits 1: Deltas are using 2-bit sentinel encoding; the size of the encoded block is [4..20] bytes
-- bits 2: Deltas are using 4-bit sentinel encoding; the size of the encoded block is [8..24] bytes
-- bits 3: All 16 byte deltas are stored verbatim; the size of the encoded block is 16 bytes
+- bits 1: Deltas are stored in 2-bit sentinel encoding; the size of the encoded block is [4..20] bytes
+- bits 2: Deltas are stored in 4-bit sentinel encoding; the size of the encoded block is [8..24] bytes
+- bits 3: All 16 byte delta are stored as bytes; the size of the encoded block is 16 bytes
+
+When using the sentinel encoding, each delta is stored as a 2-bit or 4-bit value in a single 4-byte or 8-byte block, with deltas stored from most significant to least significant bit inside the byte. That is, the 2-bit encoding is packed as:
+
+```
+(delta3 << 0) | (delta2 << 2) | (delta1 << 4) | (delta0 << 6)
+```
+
+And the 4-bit encoding is packed as:
+
+```
+(delta1 << 0) | (delta1 << 4)
+```
+
+Note that this is not the same order as the packing of the header bits found above.
+
+A that has all bits set to 1 (corresponds to `3` for 2-bit encoding and `15` for 4-bit encoding) indicates that the real delta value is outside of the 2-bit or 4-bit range, and is stored as a full byte after the bit deltas for this group.
 
 Byte deltas are stored as zigzag-encoded differences between the byte values of the element and the byte values of the previous element in the same position; the zigzag encoding scheme works as follows:
 
@@ -229,19 +245,19 @@ encode(uint8_t v) = ((v & 0x80) != 0) ? ~(v << 1) : (v << 1)
 decode(uint8_t v) = ((v & 1) != 0) ? ~(v >> 1) : (v >> 1)
 ```
 
-When using the sentinel encoding, each delta is stored as a 2-bit or 4-bit value in a single 4-byte or 8-byte block, with deltas stored from most significant to least significant bit inside the byte (e.g. two 4-bit deltas are stored as `0xXY` where X is the zigzag encoding of the first delta, and Y is the zigzag encoding of the second delta). The encoded value of the delta that has all bits set to 1 (corresponds to `3` for 2-bit deltas and `15` for 4-bit deltas, which, when decoded, represents `-2` and `-8` respectively) indicates that the real delta value is outside of the 2-bit or 4-bit range and is stored as a full byte after the bit deltas for this group. For example, for 4-bit deltas, the following byte sequence:
+For a complete example, assuming 4-bit sentinel coding, the following byte sequence:
 
 ```
 0x17 0x5f 0xf0 0xbc 0x77 0xa9 0x21 0x00 0x34 0xb5
 ```
 
-Encodes 16 deltas, where the first 8 bytes of the sequence specifies the 4-bit deltas, and the last 2 bytes of the sequence specify the explicit delta values encoded for elements 3 and 4 in the sequence, so the decoded deltas (after zigzag decoding) look like
+Encodes 16 deltas, where the first 8 bytes of the sequence specifies the 4-bit delta, and the last 2 bytes of the sequence specify the explicit delta code values encoded for elements 3 and 4 in the sequence. After de-zigzagging, the decoded deltas look like:
 
 ```
 -1 -4 -3 26 -91 0 -6 6 -4 -4 5 -5 1 -1 0 0
 ```
 
-Finally, note that the deltas are computed in 8-bit integer space with wrap-around two-complement arithmetic; for example, if the values of the first byte of two consecutive elements are `0x00` and `0xff`, the byte delta that is stored is `-1` (`1` after zigzag encoding).
+Finally, note that the deltas are computed in 8-bit integer space with wrap-around arithmetic; for example, if the values of the first byte of two consecutive elements are `0x00` and `0xFF`, the byte delta that is stored is `-1` (`1` after zigzag encoding).
 
 ## Mode 1: triangles
 
