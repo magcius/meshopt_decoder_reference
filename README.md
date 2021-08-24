@@ -25,7 +25,7 @@ Your goal is to create a reference decoder - correctness is important, but perfo
 The idea behind creating a reference decoder is both to have an easy-to-follow implementation, but also to validate correctness of the spec - the spec was written based on the C++ implementation, so it may contain errors.
 
 When the spec is found to contain ambiguities, please edit the spec to note or resolve them.
-When you're having trouble getting the implementation based on the spec to pass, you can consult the reference C++ implementation (https://github.com/zeux/meshoptimizer/blob/master/src/vertexcodec.cpp, https://github.com/zeux/meshoptimizer/blob/master/src/indexcodec.cpp, https://github.com/zeux/meshoptimizer/blob/master/src/vertexfilter.cpp).
+When you're having trouble getting the implementation based on the spec to pass, you can consult the reference C++ implementation (linked below in rot13 to avoid temptation).
 However, please only do so if you're stuck and can't follow the spec - and if you figure out the issue, please edit the spec to match the actual implementation.
 
 The output of your work should be a repository that's a fork of this one, with a new file, `decoder.js`, that makes tests pass, and edits to `spec.md` if any are required.
@@ -41,3 +41,10 @@ If your work is complete, the reward - a used but still functional RTX 2080 - wi
 ![image0 (2)](https://user-images.githubusercontent.com/1106629/130547049-e7552139-d513-48b5-b704-e1f3b93c9ff8.jpeg)
 
 By completing this assignment you explicitly transfer the rights to reference decoder and spec changes to me. The decoder may get incorporated into meshoptimizer library and/or glTF spec; the edits to the spec will be incorporated to the glTF repository, with you listed as a contributor given substantial changes. The decoder will still mention you as the original author even if the decoder gets relicensed under meshoptimizer's MIT license.
+
+Reference implementation
+===
+
+uggcf://tvguho.pbz/mrhk/zrfubcgvzvmre/oybo/znfgre/fep/iregrkpbqrp.pcc
+uggcf://tvguho.pbz/mrhk/zrfubcgvzvmre/oybo/znfgre/fep/vaqrkpbqrp.pcc
+uggcf://tvguho.pbz/mrhk/zrfubcgvzvmre/oybo/znfgre/fep/iregrksvygre.pcc
