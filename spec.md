@@ -339,7 +339,7 @@ Vertex c is pushed to vertex FIFO if `W == 0`.
 
 - `0xfe` or `0xff`: Encodes three indices explicitly.
 
-This requires an extra triangle code that is read from `data`; let's assume that results in `0xZW`.
+This requires an extra byte that is read from `data`; let's assume that results in `0xZW`. Note that this is *not* an LEB128 value, just a single byte.
 
 If `0xZW` == `0x00`, then `next` is reset to 0. This is a special mechanism used to restart the `next` sequence which is useful for concatenating independent triangle streams. This must be done before further processing.
 

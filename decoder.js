@@ -37,7 +37,7 @@ exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) 
     for (let dstElemBase = 0; dstElemBase < elementCount; dstElemBase += attrBlockMaxElementCount) {
         const attrBlockElementCount = Math.min(elementCount - dstElemBase, attrBlockMaxElementCount);
         const groupCount = ((attrBlockElementCount + 0x0F) & ~0x0F) >>> 4;
-        const headerByteCount = ((attrBlockElementCount + 0x03) & ~0x03) >>> 2;
+        const headerByteCount = ((groupCount + 0x03) & ~0x03) >>> 2;
 
         // Data blocks
         for (let byte = 0; byte < byteStride; byte++) {
@@ -73,7 +73,7 @@ exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) 
                     for (let m = 0; m < 0x10; m++) {
                         // 0 = >>> 6, 1 = >>> 4, 2 = >>> 2, 3 = >>> 0
                         const shift = (m & 0x01) ? 0 : 4;
-                        delta = (source[srcBase + (m >>> 2)] >>> shift) & 0x07;
+                        delta = (source[srcBase + (m >>> 1)] >>> shift) & 0x07;
                         if (delta === 7)
                             delta = source[srcOffs++];
                         deltas[m] = delta;
@@ -221,7 +221,7 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
             let c = -1;
 
             if (b1 === 0x00) {
-                c = next;
+                c = next++;
                 pushfifo(vertexfifo, c);
             } else if (b1 < 0x0D) {
                 c = vertexfifo[b1];
@@ -252,51 +252,52 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
                 const z = e >>> 4, w = e & 0x0F;
                 a = next++;
 
-                if (z === 0) {
+                if (z === 0x00)
                     b = next++;
-                    pushfifo(vertexfifo, b);
-                } else {
+                else
                     b = vertexfifo[z - 1];
-                }
 
-                if (w === 0) {
+                if (w === 0x00)
                     c = next++;
-                    pushfifo(vertexfifo, c);
-                } else {
+                else
                     c = vertexfifo[w - 1];
-                }
+
+                pushfifo(vertexfifo, a);
+                if (z === 0x00)
+                    pushfifo(vertexfifo, b);
+                if (w === 0x00)
+                    pushfifo(vertexfifo, c);
             } else {
-                const e = readLEB128();
+                const e = source[dataOffs++];
                 if (e === 0x00)
                     next = 0;
 
                 const z = e >>> 4, w = e & 0x0F;
 
-                if (b1 === 0x0E) {
+                if (b1 === 0x0E)
                     a = next++;
-                } else {
+                else
                     a = decodeIndex(readLEB128());
-                }
 
-                if (z === 0) {
+                if (z === 0x00)
                     b = next++;
-                    pushfifo(vertexfifo, b);
-                } else if (z === 0x0F) {
+                else if (z === 0x0F)
                     b = decodeIndex(readLEB128());
-                    pushfifo(vertexfifo, b);
-                } else {
+                else
                     b = vertexfifo[z - 1];
-                }
 
-                if (w === 0) {
+                if (w === 0x00)
                     c = next++;
-                    pushfifo(vertexfifo, c);
-                } else if (w === 0x0F) {
+                else if (w === 0x0F)
                     c = decodeIndex(readLEB128());
-                    pushfifo(vertexfifo, c);
-                } else {
+                else
                     c = vertexfifo[w - 1];
-                }
+
+                pushfifo(vertexfifo, a);
+                if (z === 0x00 || z === 0x0F)
+                    pushfifo(vertexfifo, b);
+                if (w === 0x00 || w === 0x0F)
+                    pushfifo(vertexfifo, c);
             }
 
             pushfifo(edgefifo, b); pushfifo(edgefifo, a);
