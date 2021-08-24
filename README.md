@@ -7,9 +7,9 @@ While a C++ implementation exists, the spec was written by the author of that im
 Assignment
 ===
 
-The task at hand is to create a reference decoder in JavaScript, following spec.md for implementation, and creating decoder.js.
+The task at hand is to create a reference decoder in JavaScript, following spec.md (appendix A and B) and implementing it inside decoder.js.
 
-decoder.js should implement an object with three functions with the following signatures:
+decoder.js should implement an object with three functions with the following signatures (using TypeScript syntax for clarity only):
 
 ```
 decodeVertexBuffer: (target: Uint8Array, count: number, size: number, source: Uint8Array, filter?: string) => void;
@@ -29,7 +29,7 @@ When you're having trouble getting the implementation based on the spec to pass,
 However, please only do so if you're stuck and can't follow the spec - and if you figure out the issue, please edit the spec to match the actual implementation.
 
 The output of your work should be a repository that's a fork of this one, with a new file, `decoder.js`, that makes tests pass, and edits to `spec.md` if any are required.
-Your reference implementation should have no dependencies and be written in pre-ES JS (sorry). It should be commented when necessary with references to spec. It should not use any node.js-specific primitives.
+Your reference implementation should have no dependencies and be written in pre-ES JS (sorry). It should be commented when necessary with references to spec. It should not use any node.js-specific primitives, even though you should use node.js to run tests.
 
 Please note, I can't help you debug your code or explain the spec - since you have tests and matching C++ implementation you must be able to figure it out on your own. Anything you're stuck on that's not obvious from the spec likely necessitates correcting the spec, and I can't do it for you because I wrote all C++ code and the spec so I will naturally gloss over things that are second-nature to me.
 
