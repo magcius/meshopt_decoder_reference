@@ -40,7 +40,7 @@ Please note, I can't help you debug your code or explain the spec - since you ha
 Reward & licensing
 ===
 
-The author estimates the decoder to take ~500 lines of code in JS. If your work is complete - that is, the decoder is passing all the tests and the spec has been edited if clarifications were necessary, the reward - a used but still functional RTX 2080 - will be sent to the address of choice inside USA, with the sender (me) paying shipping.
+The author estimates the decoder to take ~500 lines of code in JS. If your work is complete - that is, the decoder is passing all the tests and the spec has been edited if clarifications were necessary, the reward - a used but still functional RTX 2080 - will be sent to the address of choice inside USA, with the sender (me) paying shipping. Note that just one of these exists in the world so if you expect it, please contact me first to make sure nobody else is currently doing this expecting to get a GPU.
 
 ![image0 (2)](https://user-images.githubusercontent.com/1106629/130547049-e7552139-d513-48b5-b704-e1f3b93c9ff8.jpeg)
 
