@@ -294,7 +294,8 @@ The encoding for `code` is split into various cases, some of which are self-suff
 The edge (a, b) is read from the edge FIFO at index X (where 0 is the most recently added edge).
 The third index, `c`, is equal to `next` (which is then incremented).
 
-Edges (c, b) and (a, c) are pushed to edge FIFO (in this order).
+Edge (c, b) is pushed to the edge FIFO.
+Edge (a, c) is pushed to the edge FIFO.
 Vertex c is pushed to vertex FIFO.
 
 - `0xXY`, where `X < 0xf` and `0 < Y < 0xd`: Encodes a recently encountered edge and a recently encountered vertex.
@@ -302,7 +303,8 @@ Vertex c is pushed to vertex FIFO.
 The edge (a, b) is read from the edge FIFO at index X (where 0 is the most recently added edge).
 The third index, `c`, is read from the vertex FIFO at index Y (where 0 is the most recently added vertex; note that 0 is never actually read here, since `Y > 0`).
 
-Edges (c, b) and (a, c) are pushed to edge FIFO (in this order).
+Edge (c, b) is pushed to the edge FIFO.
+Edge (a, c) is pushed to the edge FIFO.
 
 - `0xXd` or `0xXe`, where `X < 0xf`: Encodes a recently encountered edge and a vertex that's adjacent to `last`.
 
@@ -332,7 +334,9 @@ The third index, `c`, is equal to `next` if `W == 0` (`next` is then incremented
 
 Note that in the process `next` is incremented from 1 to 3 times depending on values of Z/W.
 
-Edges (b, a), (c, b) and (a, c) are pushed to edge FIFO (in this order).
+Edge (b, a) is pushed to the edge FIFO.
+Edge (c, b) is pushed to the edge FIFO.
+Edge (a, c) is pushed to the edge FIFO.
 Vertex a is pushed to vertex FIFO.
 Vertex b is pushed to vertex FIFO if `Z == 0`.
 Vertex c is pushed to vertex FIFO if `W == 0`.
@@ -347,7 +351,9 @@ The first index, `a`, is equal to `next` for `0xfe` encoding (`next` is then inc
 The second index, `b`, is equal to `next` if `Z == 0` (`next` is then incremented), is read from vertex FIFO at index `Z-1` (where 0 is the most recently added vertex) if `Z < 0xf`, or is read using `decodeIndex` by reading extra bytes from `data` (and also updates `last`) if `Z == 0xf`.
 The third index, `c`, is equal to `next` if `W == 0` (`next` is then incremented), is read from vertex FIFO at index `W-1` (where 0 is the most recently added vertex) if `W < 0xf`, or is read using `decodeIndex` by reading extra bytes from `data` (and also updates `last`) if `W == 0xf`.
 
-Edges (b, a), (c, b) and (a, c) are pushed to edge FIFO (in this order).
+Edge (b, a) is pushed to the edge FIFO.
+Edge (c, b) is pushed to the edge FIFO.
+Edge (a, c) is pushed to the edge FIFO.
 Vertex a is pushed to vertex FIFO.
 Vertex b is pushed to vertex FIFO if `Z == 0` or `Z == 0xf`.
 Vertex c is pushed to vertex FIFO if `W == 0` or `W == 0xf`.
