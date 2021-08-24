@@ -23,3 +23,7 @@ The output of your work should be a repository that's a fork of this one, with a
 Your reference implementation should have no dependencies and be written in pre-ES JS (sorry). It should be commented when necessary with references to spec. It should not use any node.js-specific primitives.
 
 If your work is complete, the reward - a used but still functional RTX 2080 - will be sent to the address of choice inside USA, with the sender (me) paying shipping.
+
+Please note, I can't help you debug your code or explain the spec - since you have tests and matching C++ implementation you must be able to figure it out on your own. Anything you're stuck on that's not obvious from the spec likely necessitates correcting the spec, and I can't do it for you because I wrote all C++ code and the spec so I will naturally gloss over things that are second-nature to me.
+
+By completing this assignment you explicitly transfer the rights to reference decoder and spec changes to me. The decoder may get incorporated into meshoptimizer library and/or glTF spec; the edits to the spec will be incorporated to the glTF repository, with you listed as a contributor given substantial changes. The decoder will still mention you as the original author even if the decoder gets relicensed under meshoptimizer's MIT license.
