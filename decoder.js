@@ -1,10 +1,7 @@
 
 function dezig(v) {
+    // 0, -1, 1, -2, 2, -3, 3, ...
     return ((v & 1) !== 0) ? ~(v >>> 1) : v >>> 1;
-}
-
-function copysign(mag, sign) {
-    return Math.abs(mag) * Math.sign(sign);
 }
 
 /**
@@ -15,20 +12,15 @@ function copysign(mag, sign) {
  * @param {'NONE' | 'OCTAHEDRAL' | 'QUATERNION' | 'EXPONENTIAL'} filter
  */
 exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) => {
-    if (source[0] !== 0xA0) {
-        // Invalid header byte; maybe emit warning?
+    if (source[0] !== 0xA0)
         return;
-    }
 
     const attrBlockMaxElementCount = Math.min((0x2000 / byteStride) & ~0x000F, 0x100);
 
     const deltas = new Uint8Array(0x10);
-
-    // XXX(jstpierre): Not sure how best to calculate location of tail -- best I can come up with is source.byteLength,
-    // but it's possible we want the user to pass an explicit stream length here?
     const tailDataOffs = source.byteLength - byteStride;
 
-    // what deltas are stored relative to
+    // What deltas are stored relative to
     const tempData = source.slice(tailDataOffs, tailDataOffs + byteStride);
 
     let srcOffs = 0x01;
@@ -46,6 +38,7 @@ exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) 
             srcOffs += headerByteCount;
             for (let group = 0; group < groupCount; group++) {
                 const mode = (source[headerBitsOffs] >>> ((group & 0x03) << 1)) & 0x03;
+                // If this is the last group, move to the next byte of header bits.
                 if ((group & 0x03) === 0x03)
                     headerBitsOffs++;
 
@@ -84,73 +77,73 @@ exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) 
                     srcOffs += 0x10;
                 }
 
-                // go through and apply deltas to data
+                // Go through and apply deltas to data...
                 for (let m = 0; m < 0x10; m++) {
                     const dstElem = dstElemGroup + m;
                     if (dstElem >= elementCount)
                         break;
 
                     const delta = dezig(deltas[m]);
-                    const newValue = tempData[byte] + delta;
                     const dstOffs = dstElem * byteStride + byte;
-                    target[dstOffs] = newValue;
-                    tempData[byte] = newValue;
+                    target[dstOffs] = (tempData[byte] += delta);
                 }
             }
         }
     }
 
     if (filter === 'OCTAHEDRAL') {
-        let values, intmax;
+        let dst, maxInt;
         if (byteStride === 4) {
-            values = new Int8Array(target.buffer);
-            intmax = 127;
+            dst = new Int8Array(target.buffer);
+            maxInt = 127;
         } else if (byteStride === 8) {
-            values = new Int16Array(target.buffer);
-            intmax = 32767;
+            dst = new Int16Array(target.buffer);
+            maxInt = 32767;
+        } else {
+            return;
         }
 
         for (let i = 0; i < 4 * elementCount; i += 4) {
-            let x = values[i + 0], y = values[i + 1], one = values[i + 2];
+            let x = dst[i + 0], y = dst[i + 1], one = dst[i + 2];
             x /= one;
             y /= one;
-            let z = 1.0 - Math.abs(x) - Math.abs(y);
-            const t = Math.min(z, 0.0);
-            x -= copysign(t, x);
-            y -= copysign(t, y);
-            const h = intmax / Math.hypot(x, y, z);
-            values[i + 0] = Math.round(x * h);
-            values[i + 1] = Math.round(y * h);
-            values[i + 2] = Math.round(z * h);
+            const z = 1.0 - Math.abs(x) - Math.abs(y);
+            const t = Math.max(-z, 0.0);
+            x -= (x >= 0) ? t : -t;
+            y -= (y >= 0) ? t : -t;
+            const h = maxInt / Math.hypot(x, y, z);
+            dst[i + 0] = Math.round(x * h);
+            dst[i + 1] = Math.round(y * h);
+            dst[i + 2] = Math.round(z * h);
         }
     } else if (filter === 'QUATERNION') {
         if (byteStride !== 8)
             return;
 
-        const values = new Int16Array(target.buffer);
+        const dst = new Int16Array(target.buffer);
 
         for (let i = 0; i < 4 * elementCount; i += 4) {
-            const iw = values[i + 3];
-            const maxc = iw & 0x03;
-            const s = Math.SQRT1_2 / (iw | 0x03);
-            let x = values[i + 0] * s;
-            let y = values[i + 1] * s;
-            let z = values[i + 2] * s;
+            const inputW = dst[i + 3];
+            const maxComponent = inputW & 0x03;
+            const s = Math.SQRT1_2 / (inputW | 0x03);
+            let x = dst[i + 0] * s;
+            let y = dst[i + 1] * s;
+            let z = dst[i + 2] * s;
             let w = Math.sqrt(Math.max(0.0, 1.0 - x**2 - y**2 - z**2));
-            values[i + (maxc + 1) % 4] = Math.round(x * 32767);
-            values[i + (maxc + 2) % 4] = Math.round(y * 32767);
-            values[i + (maxc + 3) % 4] = Math.round(z * 32767);
-            values[i + (maxc + 0) % 4] = Math.round(w * 32767);
+            dst[i + (maxComponent + 1) % 4] = Math.round(x * 32767);
+            dst[i + (maxComponent + 2) % 4] = Math.round(y * 32767);
+            dst[i + (maxComponent + 3) % 4] = Math.round(z * 32767);
+            dst[i + (maxComponent + 0) % 4] = Math.round(w * 32767);
         }
     } else if (filter === 'EXPONENTIAL') {
         if ((byteStride & 0x03) !== 0x00)
             return;
 
-        const input = new Int32Array(target.buffer);
-        const output = new Float32Array(target.buffer);
+        const src = new Int32Array(target.buffer);
+        const dst = new Float32Array(target.buffer);
         for (let i = 0; i < (byteStride * elementCount) / 4; i++) {
-            const v = input[i], e = v >> 24, m = (v << 8) >> 8;
-            output[i] = 2.0**e * m;
+            const v = src[i], exp = v >> 24, mantissa = (v << 8) >> 8;
+            dst[i] = 2.0**exp * mantissa;
         }
     }
 };
@@ -180,10 +173,8 @@ function pushFIFO(fifo, v) {
  * @param {Uint8Array} source
  */
 exports.decodeIndexBuffer = (target, count, byteStride, source) => {
-    if (source[0] !== 0xE1) {
-        // Invalid header byte; maybe emit warning?
+    if (source[0] !== 0xE1)
         return;
-    }
 
     if (count % 3 !== 0)
         return;
@@ -252,12 +243,13 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
             dst[dstOffs++] = a;
             dst[dstOffs++] = b;
             dst[dstOffs++] = c;
-        } else /* if (b0 === 0x0F) */ {
+        } else { // (b0 === 0x0F)
             let a = -1, b = -1, c = -1;
 
             if (b1 < 0x0E) {
                 const e = source[codeauxOffs + b1];
                 const z = e >>> 4, w = e & 0x0F;
+
                 a = next++;
 
                 if (z === 0x00)
@@ -321,10 +313,8 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
 };
 
 exports.decodeIndexSequence = (target, count, byteStride, source) => {
-    if (source[0] !== 0xD1) {
-        // Invalid header byte; maybe emit warning?
+    if (source[0] !== 0xD1)
         return;
-    }
 
     let dst;
     if (byteStride === 2)
