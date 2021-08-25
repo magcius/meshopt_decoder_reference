@@ -159,10 +159,18 @@ exports.decodeVertexBuffer = (target, elementCount, byteStride, source, filter) 
  * @param {Uint32Array} fifo
  * @param {number} n
  */
-function pushfifo(fifo, n) {
-    for (let i = fifo.length - 1; i > 0; i--)
-        fifo[i] = fifo[i - 1];
-    fifo[0] = n;
+function shiftFIFO(fifo, n) {
+    for (let i = fifo.length - 1; i > n - 1; i--)
+        fifo[i] = fifo[i - n];
+}
+
+/**
+ * @param {Uint32Array} fifo
+ * @param {number} v
+ */
+function pushFIFO(fifo, v) {
+    shiftFIFO(fifo, 1);
+    fifo[0] = v;
 }
 
 /**
@@ -205,7 +213,7 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
     }
 
     let next = 0, last = 0;
-    const edgefifo = new Uint32Array(32), vertexfifo = new Uint32Array(16);
+    const edgeFIFO = new Uint32Array(32), vertexFIFO = new Uint32Array(16);
 
     function decodeIndex(v) {
         return (last += dezig(v));
@@ -217,29 +225,29 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
         const b0 = code >>> 4, b1 = code & 0x0F;
 
         if (b0 < 0x0F) {
-            const a = edgefifo[(b0 << 1) + 0], b = edgefifo[(b0 << 1) + 1];
+            const a = edgeFIFO[(b0 << 1) + 0], b = edgeFIFO[(b0 << 1) + 1];
             let c = -1;
 
             if (b1 === 0x00) {
                 c = next++;
-                pushfifo(vertexfifo, c);
+                pushFIFO(vertexFIFO, c);
             } else if (b1 < 0x0D) {
-                c = vertexfifo[b1];
+                c = vertexFIFO[b1];
             } else if (b1 === 0x0D) {
                 c = --last;
-                pushfifo(vertexfifo, c);
+                pushFIFO(vertexFIFO, c);
             } else if (b1 === 0x0E) {
                 c = ++last;
-                pushfifo(vertexfifo, c);
+                pushFIFO(vertexFIFO, c);
             } else if (b1 === 0x0F) {
                 const v = readLEB128();
                 c = decodeIndex(v);
-                pushfifo(vertexfifo, c);
+                pushFIFO(vertexFIFO, c);
             }
 
-            // fifo pushes happen backwards
-            pushfifo(edgefifo, b); pushfifo(edgefifo, c);
-            pushfifo(edgefifo, c); pushfifo(edgefifo, a);
+            shiftFIFO(edgeFIFO, 4);
+            edgeFIFO[0] = a; edgeFIFO[1] = c;
+            edgeFIFO[2] = c; edgeFIFO[3] = b;
 
             dst[dstOffs++] = a;
             dst[dstOffs++] = b;
@@ -255,18 +263,18 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
                 if (z === 0x00)
                     b = next++;
                 else
-                    b = vertexfifo[z - 1];
+                    b = vertexFIFO[z - 1];
 
                 if (w === 0x00)
                     c = next++;
                 else
-                    c = vertexfifo[w - 1];
+                    c = vertexFIFO[w - 1];
 
-                pushfifo(vertexfifo, a);
+                pushFIFO(vertexFIFO, a);
                 if (z === 0x00)
-                    pushfifo(vertexfifo, b);
+                    pushFIFO(vertexFIFO, b);
                 if (w === 0x00)
-                    pushfifo(vertexfifo, c);
+                    pushFIFO(vertexFIFO, c);
             } else {
                 const e = source[dataOffs++];
                 if (e === 0x00)
@@ -284,25 +292,26 @@ exports.decodeIndexBuffer = (target, count, byteStride, source) => {
                 else if (z === 0x0F)
                     b = decodeIndex(readLEB128());
                 else
-                    b = vertexfifo[z - 1];
+                    b = vertexFIFO[z - 1];
 
                 if (w === 0x00)
                     c = next++;
                 else if (w === 0x0F)
                     c = decodeIndex(readLEB128());
                 else
-                    c = vertexfifo[w - 1];
+                    c = vertexFIFO[w - 1];
 
-                pushfifo(vertexfifo, a);
+                pushFIFO(vertexFIFO, a);
                 if (z === 0x00 || z === 0x0F)
-                    pushfifo(vertexfifo, b);
+                    pushFIFO(vertexFIFO, b);
                 if (w === 0x00 || w === 0x0F)
-                    pushfifo(vertexfifo, c);
+                    pushFIFO(vertexFIFO, c);
             }
 
-            pushfifo(edgefifo, a); pushfifo(edgefifo, b);
-            pushfifo(edgefifo, b); pushfifo(edgefifo, c);
-            pushfifo(edgefifo, c); pushfifo(edgefifo, a);
+            shiftFIFO(edgeFIFO, 6);
+            edgeFIFO[0] = a; edgeFIFO[1] = c;
+            edgeFIFO[2] = c; edgeFIFO[3] = b;
+            edgeFIFO[4] = b; edgeFIFO[5] = a;
 
             dst[dstOffs++] = a;
             dst[dstOffs++] = b;
